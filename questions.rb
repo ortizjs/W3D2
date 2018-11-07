@@ -62,8 +62,20 @@ class User
     reply = Reply.find_by_user_id(id)
     
   end
+  
+  def followers 
+    QuestionFollow.followed_questions_for_user_id(self.id)
+  end
 
 end 
+
+
+
+
+
+
+
+
 
 
 
@@ -118,9 +130,10 @@ class Question
     Reply.find_by_question_id(self.id)
   end
   
+  def followers
+    QuestionFollow.followed_questions_for_user_id(self.id)
+  end
 end 
-
-
 
 
 
@@ -164,7 +177,9 @@ class Reply
         users_id = ?
     SQL
 
-    replies.map { |u| Reply.new(u) }
+    result = []
+    replies.map { |u| result << Reply.new(u) }
+    result
   end
   
   def self.find_by_question_id(question_id)
@@ -204,11 +219,13 @@ class Reply
       WHERE
         replies_id = ?
     SQL
-    
-    replies.map { |u| Reply.new(u) }
+    result = []
+    replies.map { |u| result << Reply.new(u) }
+    result 
   end
   
 end 
+
 
 
 
@@ -239,7 +256,62 @@ class QuestionFollow
     @body = options['body'] 
   end
   
+  def self.followers_for_question(question_id)
+    
+    question_follow = QuestionsDatabase.instance.execute(<<-SQL, question_id)
+      SELECT
+        users.id, users.fname, users.lname
+      FROM 
+        question_follows 
+      INNER JOIN users 
+        ON question_follows.users_id = users.id 
+      WHERE 
+        questions_id = ?
+    SQL
+    
+    result = []
+    question_follow.map { |u| result << User.new(u) }
+    result 
+  end
+  
+  def self.followed_questions_for_user_id(user_id)
+    question_follow = QuestionsDatabase.instance.execute(<<-SQL, user_id)
+      SELECT
+        questions.id, questions.title, questions.body, questions.author_id
+      FROM 
+        question_follows 
+      INNER JOIN questions 
+        ON question_follows.questions_id = questions.id 
+      WHERE 
+        users_id = ?
+    SQL
+    
+    result = []
+    question_follow.map { |u| result << Question.new(u) }
+    result 
+  end
+  
 end 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 class QuestionLike
   attr_accessor :id, :count, :users_id, :questions_id
