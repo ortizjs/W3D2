@@ -5,7 +5,7 @@ class QuestionsDatabase < SQLite3::Database
   include Singleton
   
   def initialize
-    super('questions.db')
+    super('questions1.db')
     self.type_translation = true 
     self.results_as_hash = true
   end
@@ -110,6 +110,14 @@ class Question
     @author_id = options['author_id']
   end
   
+  def author 
+    User.find_by_id(self.author_id)
+  end
+  
+  def replies
+    Reply.find_by_question_id(self.id)
+  end
+  
 end 
 
 
@@ -118,7 +126,7 @@ end
 
 
 class Reply  
-  attr_accessor :id, :users_id, :questions_id, :body
+  attr_accessor :id, :users_id, :questions_id, :body, :replies_id
   def self.find_by_id(id)
     reply = QuestionsDatabase.instance.execute(<<-SQL, id)
         SELECT
@@ -139,6 +147,7 @@ class Reply
     @users_id = options['users_id']
     @questions_id = options['questions_id']
     @body = options['body']
+    @replies_id = options ['replies_id']
   end
   
   
@@ -172,6 +181,31 @@ class Reply
     SQL
 
     replies.map { |q| Reply.new(q) }
+  end
+  
+  def author 
+    User.find_by_id(self.users_id)
+  end
+  
+  def question
+    Question.find_by_id(self.questions_id)
+  end
+  
+  def parent_reply
+    Reply.find_by_id(self.replies_id)
+  end
+  
+  def child_replies
+    replies = QuestionsDatabase.instance.execute(<<-SQL, self.id)
+      SELECT
+        *
+      FROM 
+        replies 
+      WHERE
+        replies_id = ?
+    SQL
+    
+    replies.map { |u| Reply.new(u) }
   end
   
 end 

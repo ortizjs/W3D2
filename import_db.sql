@@ -83,8 +83,10 @@ VALUES
 INSERT INTO
   replies (questions_id, replies_id, users_id, body)
 VALUES
-  (1, 1, 2, 'This is Ron''s reply'),
-  (2, 2, 1, 'This is Ricky''s reply');
+  (1, NULL, 2, 'This is Ron''s reply'),
+  (2, NULL, 1, 'This is Ricky''s reply'),
+  (1, 1, 1, 'Ricky responding to ron''s reply'),
+  (2, 2, 2, 'Ron responding to ricky''s reply');
 
 INSERT INTO
   question_likes (count, users_id, questions_id)
